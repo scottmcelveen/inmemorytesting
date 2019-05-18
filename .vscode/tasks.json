@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/inmemorytesting.csproj"
+                "${workspaceFolder}/src/inmemorytesting.csproj"
             ],
             "problemMatcher": "$tsc"
         },
@@ -17,7 +17,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/inmemorytesting.csproj"
+                "${workspaceFolder}/src/inmemorytesting.csproj"
             ],
             "problemMatcher": "$tsc"
         },
@@ -28,7 +28,7 @@
             "args": [
                 "watch",
                 "run",
-                "${workspaceFolder}/inmemorytesting.csproj"
+                "${workspaceFolder}/src/inmemorytesting.csproj"
             ],
             "problemMatcher": "$tsc"
         }
