@@ -61,14 +61,14 @@ namespace inmemorytesting
 
         protected virtual void ConfigureDatabases(IServiceCollection services)
         {
-            // var sqlite = new SqliteConnection("Data Source=file:memdb?mode=memory&cache=shared");
-            // sqlite.Open();
+            var sqlite = new SqliteConnection("Data Source=file:memdb?mode=memory&cache=shared");
+            sqlite.Open();
+            
+            services.Configure<DatabaseConfiguration>(c => 
+                c.RootConnectionString = "Data Source=file:memdb?mode=memory&cache=shared"
+            );
 
-            // services.Configure<DatabaseConfiguration>(c => 
-            //     c.RootConnectionString = "Data Source=file:memdb?mode=memory&cache=shared"
-            // );
-
-            // services.AddDbContext<MovieContext>(options => options.UseSqlite(sqlite));
+            services.AddDbContext<MovieContext>(options => options.UseSqlite(sqlite));
         }
     }
 }

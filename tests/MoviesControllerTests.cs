@@ -34,14 +34,13 @@ namespace tests
                 
                 var testFactory = factory.WithWebHostBuilder(builder => {
                     builder.UseEnvironment("Testing");
-                    builder.ConfigureTestServices(services => {
+                    builder.ConfigureServices(services => {
                         
                         var serviceProvider = services
                             .AddEntityFrameworkSqlite()
                             .AddDbContext<MovieContext>((sp,o) => {
                                 o.UseSqlite(sqlite).UseInternalServiceProvider(sp);
                             })
-                            .Configure<DatabaseConfiguration>(d => d.RootConnectionString = "Data Source=file:memdb1?mode=memory&cache=shared")
                             .BuildServiceProvider();
 
                         using(var scope = serviceProvider.CreateScope())
@@ -49,6 +48,11 @@ namespace tests
                             var context = scope.ServiceProvider.GetRequiredService<MovieContext>();
                             context.Database.EnsureCreated();
                         }
+                    });
+                    builder.ConfigureTestServices(services => {
+                        
+                        services
+                            .Configure<DatabaseConfiguration>(d => d.RootConnectionString = "Data Source=file:memdb1?mode=memory&cache=shared");
                     });
                 });
 
