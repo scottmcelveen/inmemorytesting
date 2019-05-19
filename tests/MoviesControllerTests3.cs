@@ -1,12 +1,10 @@
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using inmemorytesting;
 using InMemoryTesting.Configuration;
 using InMemoryTesting.Data;
 using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -18,17 +16,17 @@ using Xunit;
 
 namespace tests
 {
-    public class MoviesControllerTests : IClassFixture<WebApplicationFactory<Startup>>
+    public class MoviesControllerTests3 : IClassFixture<WebApplicationFactory<Startup>>
     {
         private WebApplicationFactory<Startup> factory;
-        public MoviesControllerTests(WebApplicationFactory<Startup> factory)
+        public MoviesControllerTests3(WebApplicationFactory<Startup> factory)
         {
             this.factory = factory;
         }
-        [Fact] //"Data Source=file:memdb1?mode=memory&cache=shared"
+        [Fact] //"Data Source=file:memdb3?mode=memory&cache=shared"
         public async Task Get()
         {
-            using(var sqlite = new SqliteConnection("Data Source=file:memdb1?mode=memory&cache=shared"))
+            using(var sqlite = new SqliteConnection("Data Source=file:memdb3?mode=memory&cache=shared"))
             {
                 sqlite.Open();
                 
@@ -41,7 +39,7 @@ namespace tests
                             .AddDbContext<MovieContext>((sp,o) => {
                                 o.UseSqlite(sqlite).UseInternalServiceProvider(sp);
                             })
-                            .Configure<DatabaseConfiguration>(d => d.RootConnectionString = "Data Source=file:memdb1?mode=memory&cache=shared")
+                            .Configure<DatabaseConfiguration>(d => d.RootConnectionString = "Data Source=file:memdb3?mode=memory&cache=shared")
                             .BuildServiceProvider();
 
                         using(var scope = serviceProvider.CreateScope())

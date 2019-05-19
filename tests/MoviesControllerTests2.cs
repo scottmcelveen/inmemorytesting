@@ -2,10 +2,13 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using inmemorytesting;
+using InMemoryTesting.Configuration;
 using InMemoryTesting.Data;
 using InMemoryTesting.Data.Entites;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -13,44 +16,41 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace tests
-{
-    [Collection("Sequential")]
-    public class MoviesControllerTests2
+{    public class MoviesControllerTests2 : IClassFixture<WebApplicationFactory<Startup>>
     {
-        public MoviesControllerTests2()
+        private WebApplicationFactory<Startup> factory;
+        public MoviesControllerTests2(WebApplicationFactory<Startup> factory)
         {
+            this.factory = factory;
         }
-
-        [Fact]
-        public async Task Post()
+        [Fact] //"Data Source=file:memdb2?mode=memory&cache=shared"
+        public async Task Get()
         {
-            // Arrange
-            var connection = new SqliteConnection("Data Source=file:memdb1?mode=memory&cache=shared");
-            connection.Open();
-
-            try
+            using(var sqlite = new SqliteConnection("Data Source=file:memdb2?mode=memory&cache=shared"))
             {
-                var options = new DbContextOptionsBuilder<MovieContext>()
-                    .UseSqlite(connection)
-                    .Options;
+                sqlite.Open();
+                
+                var testFactory = factory.WithWebHostBuilder(builder => {
+                    builder.UseEnvironment("Testing");
+                    builder.ConfigureTestServices(services => {
+                        
+                        var serviceProvider = services
+                            .AddEntityFrameworkSqlite()
+                            .AddDbContext<MovieContext>((sp,o) => {
+                                o.UseSqlite(sqlite).UseInternalServiceProvider(sp);
+                            })
+                            .Configure<DatabaseConfiguration>(d => d.RootConnectionString = "Data Source=file:memdb2?mode=memory&cache=shared")
+                            .BuildServiceProvider();
 
-                using (var context = new MovieContext(options))
-                {
-                    context.Database.EnsureCreated();
-                }
+                        using(var scope = serviceProvider.CreateScope())
+                        {
+                            var context = scope.ServiceProvider.GetRequiredService<MovieContext>();
+                            context.Database.EnsureCreated();
+                        }
+                    });
+                });
 
-                var webHost = new WebHostBuilder().Configure(app => {
-                    ;
-                }).ConfigureAppConfiguration(config => {
-                    ;
-                }).ConfigureTestServices(services => {
-                    services.AddDbContext<MovieContext>(o =>
-                        o.UseSqlite("Data Source=file:memdb1?mode=memory&cache=shared"));
-                    services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-                }).UseStartup<Startup>();
-            
-                var server = new TestServer(webHost);
-                var client = server.CreateClient();
+                var client = testFactory.CreateClient();
 
                 // Act
                 var response = await client.PostAsJsonAsync("/api/movies", new Movie { Title = "TESTMOVIE", ReleaseYear = 2000 });
@@ -59,10 +59,6 @@ namespace tests
                 
                 // Assert
                 Assert.Equal("TESTMOVIE", movie.Title);
-            }
-            finally
-            {
-                connection.Close();
             }
         }
     }

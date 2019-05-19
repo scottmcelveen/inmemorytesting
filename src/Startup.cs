@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InMemoryTesting.Configuration;
 using InMemoryTesting.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -28,12 +29,7 @@ namespace inmemorytesting
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var sqlite = new SqliteConnection("Data Source=file:memdb1?mode=memory&cache=shared");
-            sqlite.Open();
-
-            services.AddDbContext<MovieContext>(options =>
-                //options.UseInMemoryDatabase("MoviesInMemory"));
-                options.UseSqlite(sqlite));
+            ConfigureDatabases(services);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -50,14 +46,29 @@ namespace inmemorytesting
                 app.UseHsts();
             }
 
-            using(var scope = app.ApplicationServices.CreateScope())
+            if(env.IsEnvironment("Testing") == false)
             {
-                var context = scope.ServiceProvider.GetRequiredService<MovieContext>();
-                context.Database.EnsureCreated();
+                using(var scope = app.ApplicationServices.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<MovieContext>();
+                    context.Database.EnsureCreated();
+                }
             }
 
             app.UseHttpsRedirection();
             app.UseMvc();
+        }
+
+        protected virtual void ConfigureDatabases(IServiceCollection services)
+        {
+            // var sqlite = new SqliteConnection("Data Source=file:memdb?mode=memory&cache=shared");
+            // sqlite.Open();
+
+            // services.Configure<DatabaseConfiguration>(c => 
+            //     c.RootConnectionString = "Data Source=file:memdb?mode=memory&cache=shared"
+            // );
+
+            // services.AddDbContext<MovieContext>(options => options.UseSqlite(sqlite));
         }
     }
 }
