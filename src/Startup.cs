@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,8 +28,12 @@ namespace inmemorytesting
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var sqlite = new SqliteConnection("Data Source=file:memdb1?mode=memory&cache=shared");
+            sqlite.Open();
+
             services.AddDbContext<MovieContext>(options =>
-                options.UseInMemoryDatabase("MoviesInMemory"));
+                //options.UseInMemoryDatabase("MoviesInMemory"));
+                options.UseSqlite(sqlite));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

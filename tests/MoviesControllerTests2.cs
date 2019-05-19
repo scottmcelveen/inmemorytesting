@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using inmemorytesting;
 using InMemoryTesting.Data;
+using InMemoryTesting.Data.Entites;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
@@ -14,14 +15,14 @@ using Xunit;
 namespace tests
 {
     [Collection("Sequential")]
-    public class MoviesControllerTests
+    public class MoviesControllerTests2
     {
-        public MoviesControllerTests()
+        public MoviesControllerTests2()
         {
         }
 
         [Fact]
-        public async Task Get()
+        public async Task Post()
         {
             // Arrange
             var connection = new SqliteConnection("Data Source=file:memdb1?mode=memory&cache=shared");
@@ -52,12 +53,12 @@ namespace tests
                 var client = server.CreateClient();
 
                 // Act
-                var response = await client.GetAsync("/api/movies");
+                var response = await client.PostAsJsonAsync("/api/movies", new Movie { Title = "TESTMOVIE", ReleaseYear = 2000 });
                 response.EnsureSuccessStatusCode();
-                var responseString = await response.Content.ReadAsStringAsync();
-
+                var movie = await response.Content.ReadAsAsync<Movie>();
+                
                 // Assert
-                Assert.Equal("2", responseString);
+                Assert.Equal("TESTMOVIE", movie.Title);
             }
             finally
             {

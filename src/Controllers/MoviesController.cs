@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using InMemoryTesting.Data;
 using InMemoryTesting.Data.Entites;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
 
 namespace inmemorytesting.Controllers
 {
@@ -23,7 +24,14 @@ namespace inmemorytesting.Controllers
         [HttpGet]
         public ActionResult<int> Get()
         {
-            return movieContext.Movies.Count();
+            Int64 sqlCount = 0;
+            var sqlite = new SqliteConnection("Data Source=file:memdb1?mode=memory&cache=shared");
+            sqlite.Open();
+            var command = sqlite.CreateCommand();
+            command.CommandText = "select COUNT(Id) from movies";
+            var result = command.ExecuteScalar();
+            var total =  movieContext.Movies.Count() + Convert.ToInt32(result);
+            return total;
         }
 
         // POST api/movies
